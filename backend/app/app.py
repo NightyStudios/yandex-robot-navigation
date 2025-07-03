@@ -10,7 +10,7 @@ async def ping() -> dict:
 
 
 @app.post("/frame")
-async def upload_raw(image: Request):
+async def upload_raw(phrase: str, image: Request):
     body = await image.body()
 
     if len(body) == 0:
@@ -29,4 +29,4 @@ async def upload_raw(image: Request):
 
     # f - ОБРАБОТКА ТРАНСФОРМЕРОМ
     data = f(body)
-    return data
+    return {'data': data, 'phrase': phrase}
