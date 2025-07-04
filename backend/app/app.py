@@ -1,9 +1,7 @@
-from io import BytesIO
-
-from app.core.transformer import f
+from app.core.transformer import f, set_title
+from app.models import Title
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import StreamingResponse
 
 app = FastAPI(root_path='/api/v1')
 
@@ -14,7 +12,7 @@ async def ping() -> dict:
 
 
 @app.post("/frame")
-async def get_coordinates(phrase: str, request: Request):
+async def get_coordinates(request: Request):
     body = await request.body()
 
     if not body:
@@ -28,6 +26,14 @@ async def get_coordinates(phrase: str, request: Request):
         file_type = "unknown"
 
     result = f(body)
-    print(result)
+    # print(result)
 
     return {"status": "GOOOOOOOOL"}
+
+
+@app.post("/title")
+async def set_title(title: Title):
+    title = title.title
+    res = set_title(title)
+
+    return res

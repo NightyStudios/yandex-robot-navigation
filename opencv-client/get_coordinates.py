@@ -3,7 +3,7 @@ import time
 
 import requests
 
-def send_frame(phrase: str, image_bytes: str, server_url: str):
+def send_frame(image_bytes: str, server_url: str):
     """
     Отправляет байты изображения на сервер по указанному URL.
 
@@ -13,10 +13,8 @@ def send_frame(phrase: str, image_bytes: str, server_url: str):
     :return: Ответ от сервера (Response object)
     """
     try:
-        # Добавляем фразу в query string, а изображение в raw body
         response = requests.post(
-            url="http://localhost:8000/api/v1/frame",
-            params={"phrase": "red cup"},
+            url=server_url,
             data=image_bytes,  # просто байты JPEG
             headers={"Content-Type": "application/octet-stream"}
         )
@@ -58,7 +56,7 @@ def main():
             raise RuntimeError("Ошибка при кодировании изображения")
 
         bytes_image = img_buf.tobytes()
-        send_frame('red cup', bytes_image, ADDRESS_FOR_POST_IMAGE)
+        send_frame(bytes_image, ADDRESS_FOR_POST_IMAGE)
 
         cv.imshow('frame', frame)
         time.sleep(1)
@@ -69,4 +67,4 @@ def main():
     cv.destroyAllWindows()
 
 
-main()
+# main()
