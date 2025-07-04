@@ -15,6 +15,7 @@ def send_frame(image_bytes: str, server_url: str):
     try:
         response = requests.post(
             url=server_url,
+            params={"phrase": "phone"},
             data=image_bytes,  # просто байты JPEG
             headers={"Content-Type": "application/octet-stream"}
         )
