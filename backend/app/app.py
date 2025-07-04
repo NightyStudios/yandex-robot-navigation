@@ -14,8 +14,8 @@ async def ping() -> dict:
 
 
 @app.post("/frame")
-async def get_coordinates(request: Request):
-    body = await request.body()
+async def get_coordinates(phrase: str, image: Request):
+    body = await image.body()
 
     if not body:
         raise HTTPException(status_code=400, detail="Empty body")
