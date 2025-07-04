@@ -1,6 +1,8 @@
 from app.core.transformer import f, set_title
 from app.models import Title
 
+fom app.core.OWLV2 import run_owlv2_inference_hardcoded
+
 from fastapi import FastAPI, Request, HTTPException
 
 app = FastAPI(root_path='/api/v1')
@@ -25,15 +27,9 @@ async def get_coordinates(request: Request):
     else:
         file_type = "unknown"
 
-    result = f(body)
-    # print(result)
+    result = run_owlv2_inference_hardcoded(body)
+    print(result)
 
-    return {"status": "GOOOOOOOOL"}
+    return {"result": result}
 
 
-@app.post("/title")
-async def set_title(title: Title):
-    title = title.title
-    res = set_title(title)
-
-    return res
