@@ -1,7 +1,6 @@
-from app.core.transformer import f, set_title
 from app.models import Title
 
-fom app.core.OWLV2 import run_owlv2_inference_hardcoded
+from app.core.OWLV2 import run_owlv2_inference_hardcoded
 
 from fastapi import FastAPI, Request, HTTPException
 
@@ -27,7 +26,7 @@ async def get_coordinates(phrase: str, image: Request):
     else:
         file_type = "unknown"
 
-    result = run_owlv2_inference_hardcoded(body)
+    result = test(body, phrase)
     print(result)
 
     return {"result": result}

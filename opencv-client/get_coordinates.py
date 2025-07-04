@@ -3,7 +3,7 @@ import time
 
 import requests
 
-def send_frame(image_bytes: str, server_url: str):
+def send_frame(image_bytes: str, server_url: str, phrase: str):
     """
     Отправляет байты изображения на сервер по указанному URL.
 
@@ -15,7 +15,7 @@ def send_frame(image_bytes: str, server_url: str):
     try:
         response = requests.post(
             url=server_url,
-            params={"phrase": "phone"},
+            params={"phrase": phrase},
             data=image_bytes,  # просто байты JPEG
             headers={"Content-Type": "application/octet-stream"}
         )
@@ -49,15 +49,10 @@ def main():
             break
 
         # Параметры качества сжатия JPEG
-        quality_params = [int(cv.IMWRITE_JPEG_QUALITY), 70]  # качество от 0 до 100
+        quality_params = [int(cv.IMWRITE_JPEG_QUALITY), 100]  # качество от 0 до 100
 
-        # Кодирование изображения в формат JPEG
-        success, img_buf = cv.imencode('.jpg', frame, quality_params)
-        if not success:
-            raise RuntimeError("Ошибка при кодировании изображения")
-
-        bytes_image = img_buf.tobytes()
-        send_frame(bytes_image, ADDRESS_FOR_POST_IMAGE)
+        bytes_image = frame.tobytes()
+        send_frame(bytes_image, ADDRESS_FOR_POST_IMAGE, 'phone')
 
         cv.imshow('frame', frame)
         time.sleep(1)
@@ -68,4 +63,4 @@ def main():
     cv.destroyAllWindows()
 
 
-# main()
+main()

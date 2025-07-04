@@ -1,8 +1,6 @@
 import numpy as np
 import torch
 from PIL import Image
-from io import BytesIO
-import requests
 from transformers import Owlv2Processor, Owlv2ForObjectDetection
 
 
