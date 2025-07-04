@@ -12,15 +12,14 @@ def send_frame(phrase: str, image_bytes: str, server_url: str):
     :param phrase: Название объекта, который будет найден на сервере
     :return: Ответ от сервера (Response object)
     """
-    # Подготовка данных для отправки
-    data = {
-        'phrase': phrase,
-        'image': image_bytes
-    }
-
     try:
-        response = requests.post(server_url, data=data
-                                 )
+        # Добавляем фразу в query string, а изображение в raw body
+        response = requests.post(
+            url="http://localhost:8000/api/v1/frame",
+            params={"phrase": "red cup"},
+            data=image_bytes,  # просто байты JPEG
+            headers={"Content-Type": "application/octet-stream"}
+        )
         return response
     except requests.exceptions.RequestException as e:
         print(f"[Ошибка] Не удалось отправить изображение: {e}")
@@ -28,11 +27,11 @@ def send_frame(phrase: str, image_bytes: str, server_url: str):
 
 
 def main():
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(1)
 
 
     # ADDRESS_FOR_POST_IMAGE = "127.0.0.1:8080"
-    ADDRESS_FOR_POST_IMAGE = "http://localhost:8080/api/v1/frame"
+    ADDRESS_FOR_POST_IMAGE = "http://0.0.0.0:8000/api/v1/frame"
     WEIDTH_OF_VIDEO = 640
     HEIGHT_OF_VIDEO = 480
 
@@ -51,22 +50,15 @@ def main():
             break
 
         # Параметры качества сжатия JPEG
-        quality_params = [int(cv.IMWRITE_JPEG_QUALITY), 20]  # качество от 0 до 100
+        quality_params = [int(cv.IMWRITE_JPEG_QUALITY), 70]  # качество от 0 до 100
 
         # Кодирование изображения в формат JPEG
         success, img_buf = cv.imencode('.jpg', frame, quality_params)
         if not success:
             raise RuntimeError("Ошибка при кодировании изображения")
 
-        # Теперь img_buf содержит сжатое изображение в формате JPEG (в виде массива байтов)
-        # Его можно сохранить в файл или использовать далее по назначению
-
-        # Например, сохранение в файл:
-        with open('output.jpg', 'wb') as f:
-            bytes_image = img_buf.tobytes()
-            f.write(bytes_image)
-
-        send_frame(bytes_image, ADDRESS_FOR_POST_IMAGE)
+        bytes_image = img_buf.tobytes()
+        send_frame('red cup', bytes_image, ADDRESS_FOR_POST_IMAGE)
 
         cv.imshow('frame', frame)
         time.sleep(1)
@@ -75,3 +67,6 @@ def main():
 
     cap.release()
     cv.destroyAllWindows()
+
+
+main()

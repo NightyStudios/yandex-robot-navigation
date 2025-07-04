@@ -1,7 +1,11 @@
-from app.core.transformer import f
-from fastapi import FastAPI, Request, HTTPException
+from io import BytesIO
 
-app = FastAPI(openapi_prefix='/api/v1')
+from app.core.transformer import f
+
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import StreamingResponse
+
+app = FastAPI(root_path='/api/v1')
 
 
 @app.get("/ping")
@@ -10,23 +14,20 @@ async def ping() -> dict:
 
 
 @app.post("/frame")
-async def upload_raw(phrase: str, image: Request):
-    body = await image.body()
+async def get_coordinates(phrase: str, request: Request):
+    body = await request.body()
 
-    if len(body) == 0:
+    if not body:
         raise HTTPException(status_code=400, detail="Empty body")
 
-    if len(body) > 2 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="Too big")
-
-    if body.startswith(b"\x89PNG\r\n\x1a\n"):
-        file_type = "png"
-    elif body.startswith(b"\xff\xd8"):
+    if body.startswith(b"\xff\xd8"):
         file_type = "jpeg"
+    elif body.startswith(b"\x89PNG\r\n\x1a\n"):
+        file_type = "png"
     else:
-        file_type = "ne znayu"
-        # raise HTTPException(status_code=400, detail="Unknown file format")
+        file_type = "unknown"
 
-    # f - ОБРАБОТКА ТРАНСФОРМЕРОМ
-    data = f(body)
-    return {'data': data, 'phrase': phrase}
+    result = f(body)
+    print(result)
+
+    return {"status": "GOOOOOOOOL"}
