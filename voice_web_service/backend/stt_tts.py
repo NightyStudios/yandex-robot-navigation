@@ -129,12 +129,12 @@ def summarize_objects_from_text_request(prompt):
         return f"An error occurred: {e}"
 
 
-def text_to_speach(text: str) -> None:
+def text_to_speach(text: str, output_path: str) -> None:
     model = ttsModel(model_name="vosk-model-tts-ru-0.8-multi")
     synth = Synth(model)
 
-    synth.synth(f"Привет! Сейчас найду тебе {text[0][0]}!", "out.wav", speaker_id=2)
-    print("Ответ сохранён в out.wav")
+    synth.synth(f"Привет! Сейчас найду тебе {text[0][0]}!", output_path, speaker_id=2)
+    print(f"Ответ сохранён в {output_path}")
 
     return None
 
