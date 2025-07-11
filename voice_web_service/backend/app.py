@@ -1,6 +1,6 @@
 import os
-import tempfile
 import subprocess
+import tempfile
 import threading
 
 from backend.stt_tts import get_transcribrion, summarize_objects_from_text_request_yandex, text_to_speach
@@ -21,6 +21,7 @@ async def upload_audio(audio: UploadFile = File(...)) -> dict:
     result = get_transcribrion(tmp_path)
     summary = summarize_objects_from_text_request_yandex(result)
 
+    print(summary)
     # print(summary)
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tts_file:
         tts_path = tts_file.name

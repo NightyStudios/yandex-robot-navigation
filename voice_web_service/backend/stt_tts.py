@@ -2,6 +2,7 @@ import os
 import subprocess
 
 import openai
+import torch
 from dotenv import load_dotenv
 from vosk import Model, KaldiRecognizer
 from vosk_tts import Synth, Model as ttsModel
@@ -184,7 +185,12 @@ def summarize_objects_from_text_request_yandex(prompt: str) -> str:
         return f"An error occurred: {e}"
 
 def text_to_speach(text: str, output_path: str) -> None:
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Используемое устройство: {device}")
+
     model = ttsModel(model_name="vosk-model-tts-ru-0.8-multi")
+
+    model.model = model.model.to(device)
     synth = Synth(model)
 
     synth.synth(f"Привет! Сейчас найду тебе {text[0][0]}!", output_path, speaker_id=2)
