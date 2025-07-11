@@ -6,8 +6,13 @@ from dotenv import load_dotenv
 from vosk import Model, KaldiRecognizer
 from vosk_tts import Synth, Model as ttsModel
 
+from yandex_cloud_ml_sdk import YCloudML
+
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+yandex_api_key = os.getenv("YANDEX_API_KEY")
+yandex_folder_id = os.getenv("YANDEX_FOLDER_ID")
 
 SAMPLE_RATE = 16000
 
@@ -38,7 +43,7 @@ def get_transcribrion(path: str) -> str:
     return text
 
 
-def summarize_objects_from_text_request(prompt):
+def summarize_objects_from_text_request_openai(prompt):
     # Without translation
     # system_promt = "You are an intermediate processing module for a robot. Your task is to analyze the text of a user's voice command and extract the key objects that the robot should visually identify and physically approach.\
     #     For each object mentioned, you must also extract any associated descriptive words (e.g., colors, sizes, shapes, or other adjectives) that help define the object.\
@@ -73,12 +78,7 @@ def summarize_objects_from_text_request(prompt):
     #     Let me know if you'd like to integrate it into a code pipeline or connect with a speech-to-text layer!"
 
     # With translation and original
-    system_promt = "Absolutely! Here's a fully enhanced version of the prompt tailored for use with an object recognition model. It includes:\
-        Extraction of key objects with descriptive (but non-subjective) attributes.\
-        Translation from the original language to English.\
-        Filtering out of subjective or emotional adjectives to maintain clarity and maximize object detection accuracy.\
-        🔧 Enhanced Prompt for Object Extraction and Translation (Optimized for Object Recognition):\
-        You are an intermediate module for a robot, responsible for processing natural-language voice commands from users. Your primary function is to extract concrete, visually detectable objects that the robot should identify and approach.\
+    system_promt = "You are an intermediate module for a robot, responsible for processing natural-language voice commands from users. Your primary function is to extract concrete, visually detectable objects that the robot should identify and approach.\
         Follow these exact instructions:\
         🔍 OBJECT EXTRACTION\
         Identify physical objects explicitly mentioned in the input.\
@@ -128,6 +128,60 @@ def summarize_objects_from_text_request(prompt):
     except Exception as e:
         return f"An error occurred: {e}"
 
+
+def summarize_objects_from_text_request_yandex(prompt: str) -> str:
+    sdk = YCloudML(
+        folder_id=yandex_folder_id,
+        auth=yandex_api_key
+    )
+
+    model = sdk.models.completions("yandexgpt", model_version="rc")
+    model = model.configure(temperature=0.3)
+    try:
+        result = model.run(
+            [
+                {"role": "system", "text": "You are an intermediate module for a robot, responsible for processing natural-language voice commands from users. Your primary function is to extract concrete, visually detectable objects that the robot should identify and approach.\
+                Follow these exact instructions:\
+                🔍 OBJECT EXTRACTION\
+                Identify physical objects explicitly mentioned in the input.\
+                Retain only descriptive attributes that are:\
+                Objective\
+                Visually observable (e.g., color, shape, size)\
+                Remove all subjective, emotional, or personal descriptors, such as:\
+                “my favorite”, “beautiful”, “scary”, “funny”, etc.\
+                Example:\
+                Input: 'Find my favorite red cat'\
+                Output: кот;cat (“red” is ignored if not essential for visual identification or is subjective in context)\
+                🌐 TRANSLATION FORMAT\
+                For each object, output the pair:\
+                [original phrase];[English translation]\
+                Separate each object with a comma.\
+                ✅ OUTPUT RULES\
+                Use only essential adjectives: colors, shapes, sizes.\
+                Each item must be formatted as:\
+                [original adjective + noun];[translated adjective + noun]\
+                If no valid attributes exist, output just the noun:\
+                кошка;cat\
+                🧠 EXAMPLES\
+                User command: 'Покажи мою любимую красную пирамиду и огромную бутылку воды'\
+                → Output: красная пирамида;red pyramid, большая бутылка;large bottle'\
+                User command: 'Найди страшную игрушку и зелёный куб'\
+                → Output: игрушка;toy, зелёный куб;green cube\
+                User command: 'Подойди к моему милому синему ведру и любимому столу'\
+                → Output: синее ведро;blue bucket, стол;table\
+                This format ensures clarity, consistency, and high compatibility with downstream object detection systems.\
+                Let me know if you'd like this as a structured JSON response format or used in a live NLP pipeline."},
+                {
+                    "role": "user",
+                    "text": prompt,
+                },
+            ]
+        )
+
+        return result[0].text
+
+    except Exception as e:
+        return f"An error occurred: {e}"
 
 def text_to_speach(text: str, output_path: str) -> None:
     model = ttsModel(model_name="vosk-model-tts-ru-0.8-multi")
