@@ -17,7 +17,7 @@ yandex_folder_id = os.getenv("YANDEX_FOLDER_ID")
 SAMPLE_RATE = 16000
 
 
-def get_transcribrion(path: str) -> str:
+def get_transcription(path: str) -> str:
     '''
     :param path: path to file that have to be transcribed
     :return: transcribed text

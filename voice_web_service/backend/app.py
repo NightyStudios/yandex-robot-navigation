@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 import threading
 
-from backend.stt_tts import get_transcription_gpu, summarize_objects_from_text_request_yandex, text_to_speach
+from backend.stt_tts import get_transcription, summarize_objects_from_text_request_yandex, text_to_speach
 from fastapi import FastAPI, UploadFile, File
 
 api = FastAPI(
@@ -18,7 +18,7 @@ async def upload_audio(audio: UploadFile = File(...)) -> dict:
         tmp.write(content)
         tmp_path = tmp.name
 
-    result = get_transcription_gpu(tmp_path)
+    result = get_transcription(tmp_path)
     summary = summarize_objects_from_text_request_yandex(result)
 
     print(summary)
