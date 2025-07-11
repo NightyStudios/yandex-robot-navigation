@@ -2,9 +2,10 @@ import os
 import subprocess
 
 import openai
-import torch
 from dotenv import load_dotenv
+from vosk import Model, KaldiRecognizer
 from vosk_tts import Synth, Model as ttsModel
+
 from yandex_cloud_ml_sdk import YCloudML
 
 load_dotenv()
@@ -16,20 +17,30 @@ yandex_folder_id = os.getenv("YANDEX_FOLDER_ID")
 SAMPLE_RATE = 16000
 
 
-def get_transcription_gpu(audio_path: str) -> str:
-    """
-    Использует GPU-версию Kaldi из репозитория vosk-api-gpu
-    """
-    process = subprocess.Popen(
-        ["./vosk-api-gpu/bin/transcriber", "--model", "path_to_model", "--audio", audio_path],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    out, err = process.communicate()
-    if process.returncode != 0:
-        raise RuntimeError(f"Ошибка в transcriber: {err.decode()}")
+def get_transcribrion(path: str) -> str:
+    '''
+    :param path: path to file that have to be transcribed
+    :return: transcribed text
+    '''
+    model = Model(lang="ru")
+    rec = KaldiRecognizer(model, SAMPLE_RATE)
 
-    return out.decode().strip()
+    with subprocess.Popen(["ffmpeg", "-loglevel", "quiet", "-i",
+                           path,
+                           "-ar", str(SAMPLE_RATE), "-ac", "1", "-f", "s16le", "-"],
+                          stdout=subprocess.PIPE) as process:
+
+        while True:
+            data = process.stdout.read(4000)
+            if len(data) == 0:
+                break
+            if rec.AcceptWaveform(data):
+                rec.Result()
+            else:
+                rec.PartialResult()
+
+    text = rec.FinalResult()
+    return text
 
 
 def summarize_objects_from_text_request_openai(prompt):
@@ -138,20 +149,11 @@ def summarize_objects_from_text_request_yandex(prompt: str) -> str:
     except Exception as e:
         return f"An error occurred: {e}"
 
-
 def text_to_speach(text: str, output_path: str) -> None:
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Используемое устройство: {device}")
-
     model = ttsModel(model_name="vosk-model-tts-ru-0.8-multi")
-
-    # Перемещаем веса на GPU
-    model.model = model.model.to(device)
-
-    # Некоторые TTS модели требуют передачи device в forward
     synth = Synth(model)
-    synth.device = device  # <- добавим это, если не работает — перепишем forward
 
     synth.synth(f"Привет! Сейчас найду тебе {text[0][0]}!", output_path, speaker_id=2)
-
     print(f"Ответ сохранён в {output_path}")
+
+    return None
