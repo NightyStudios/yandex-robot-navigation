@@ -1,5 +1,7 @@
+import base64
 import os
 import subprocess
+import time
 import wave
 
 import openai
@@ -89,7 +91,7 @@ def get_tts_speechkit(text: str, output_path: str) -> str:
         data={
             "text": text,
             "lang": "ru-RU",
-            "voice": "alyss",  # или "ermil", "jane", "oksana", "zahar"
+            "voice": "zahar",  # или "ermil", "jane", "oksana", "zahar"
             "folderId": yandex_folder_id,
             "speed": "1.0",
             "format": "lpcm",
@@ -105,6 +107,47 @@ def get_tts_speechkit(text: str, output_path: str) -> str:
         print("Ошибка:", response.text)
     return output_path
 
+
+def get_stt_speechkit_v3(path: str) -> str:
+    with open(path, "rb") as f:
+        audio_data = f.read()
+
+    response = requests.post(
+        url="https://transcribe.api.cloud.yandex.net/speech/stt/v3/longRunningRecognize",
+        headers={
+            "Authorization": f"Bearer {yandex_iam_key}",
+        },
+        json={
+            "config": {
+                "specification": {
+                    "languageCode": "ru-RU",
+                    "model": "general"
+                },
+                "folderId": yandex_folder_id
+            },
+            "audio": {
+                "content": base64.b64encode(audio_data).decode("utf-8")
+            }
+        }
+    )
+
+    print(response)
+    operation = response.json()
+    operation_id = operation["id"]
+
+    while True:
+        operation_response = requests.get(
+            f"https://operation.api.cloud.yandex.net/operations/{operation_id}",
+            headers={"Authorization": f"Bearer {yandex_iam_key}"}
+        )
+        result = operation_response.json()
+        if result.get("done"):
+            break
+        time.sleep(1)
+
+    chunks = result["response"]["chunks"]
+    text_result = " ".join([chunk["alternatives"][0]["text"] for chunk in chunks])
+    return text_result
 
 def summarize_objects_from_text_request_openai(prompt):
     system_promt = "You are an intermediate module for a robot, responsible for processing natural-language voice commands from users. Your primary function is to extract concrete, visually detectable objects that the robot should identify and approach.\
