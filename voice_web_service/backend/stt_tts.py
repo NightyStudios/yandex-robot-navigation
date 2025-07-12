@@ -6,10 +6,8 @@ import wave
 
 import openai
 import requests
-import torch
 
 from dotenv import load_dotenv
-from pydub import AudioSegment
 from vosk import Model, KaldiRecognizer
 from vosk_tts import Synth, Model as ttsModel
 from yandex_cloud_ml_sdk import YCloudML
