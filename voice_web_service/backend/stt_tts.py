@@ -1,20 +1,37 @@
+import base64
 import os
 import subprocess
+import time
+import wave
 
 import openai
+import requests
+import torch
+
 from dotenv import load_dotenv
+from pydub import AudioSegment
 from vosk import Model, KaldiRecognizer
 from vosk_tts import Synth, Model as ttsModel
-
 from yandex_cloud_ml_sdk import YCloudML
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-yandex_api_key = os.getenv("YANDEX_API_KEY")
+yandex_iam_key = os.getenv("YANDEX_IAM_KEY")
 yandex_folder_id = os.getenv("YANDEX_FOLDER_ID")
 
 SAMPLE_RATE = 16000
+
+
+def convert_raw_to_wav(input_path: str, output_oath: str) -> str:
+    with open(input_path, "rb") as inp_f:
+        data = inp_f.read()
+        with wave.open(output_oath, "wb") as out_f:
+            out_f.setnchannels(1)
+            out_f.setsampwidth(2)
+            out_f.setframerate(44100)
+            out_f.writeframesraw(data)
+    return output_oath
 
 
 def get_transcription(path: str) -> str:
@@ -42,6 +59,96 @@ def get_transcription(path: str) -> str:
     text = rec.FinalResult()
     return text
 
+
+def get_stt_speechkit(path: str) -> str:
+    with open(path, "rb") as f:
+        audio_data = f.read()
+
+    response = requests.post(
+        url="https://stt.api.cloud.yandex.net/speech/v1/stt:recognize",
+        headers={
+            "Authorization": f"Bearer {yandex_iam_key}",
+            "Content-Type": "application/ogg"
+        },
+        params={
+            "folderId": yandex_folder_id,
+            "lang": "ru-RU"
+        },
+        data=audio_data
+    )
+
+    result = response.json()
+    return result
+
+
+def get_tts_speechkit(text: str, output_path: str) -> str:
+    text = f"Привет! Сейчас найду тебе {text.split(';')[0]}!"
+
+    response = requests.post(
+        "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize",
+        headers={
+            "Authorization": f"Bearer {yandex_iam_key}"
+        },
+        data={
+            "text": text,
+            "lang": "ru-RU",
+            "voice": "zahar",  # или "ermil", "jane", "oksana", "zahar"
+            "folderId": yandex_folder_id,
+            "speed": "1.0",
+            "format": "lpcm",
+            "sampleRateHertz": 48000,
+        }
+    )
+
+    if response.status_code == 200:
+        with open(output_path, "wb") as f:
+            f.write(response.content)
+        print(f"Аудио сохранено в {output_path}")
+    else:
+        print("Ошибка:", response.text)
+    return output_path
+
+
+def get_stt_speechkit_v3(path: str) -> str:
+    with open(path, "rb") as f:
+        audio_data = f.read()
+
+    response = requests.post(
+        url="https://transcribe.api.cloud.yandex.net/speech/stt/v3/longRunningRecognize",
+        headers={
+            "Authorization": f"Bearer {yandex_iam_key}",
+        },
+        json={
+            "config": {
+                "specification": {
+                    "languageCode": "ru-RU",
+                    "model": "general"
+                },
+                "folderId": yandex_folder_id
+            },
+            "audio": {
+                "content": base64.b64encode(audio_data).decode("utf-8")
+            }
+        }
+    )
+
+    print(response)
+    operation = response.json()
+    operation_id = operation["id"]
+
+    while True:
+        operation_response = requests.get(
+            f"https://operation.api.cloud.yandex.net/operations/{operation_id}",
+            headers={"Authorization": f"Bearer {yandex_iam_key}"}
+        )
+        result = operation_response.json()
+        if result.get("done"):
+            break
+        time.sleep(1)
+
+    chunks = result["response"]["chunks"]
+    text_result = " ".join([chunk["alternatives"][0]["text"] for chunk in chunks])
+    return text_result
 
 def summarize_objects_from_text_request_openai(prompt):
     system_promt = "You are an intermediate module for a robot, responsible for processing natural-language voice commands from users. Your primary function is to extract concrete, visually detectable objects that the robot should identify and approach.\
@@ -92,13 +199,14 @@ def summarize_objects_from_text_request_openai(prompt):
         return list(map(lambda x: x.split(";"), response.choices[0].message.content.split(", ")))
 
     except Exception as e:
+        print(e)
         return f"An error occurred: {e}"
 
 
 def summarize_objects_from_text_request_yandex(prompt: str) -> str:
     sdk = YCloudML(
         folder_id=yandex_folder_id,
-        auth=yandex_api_key
+        auth=yandex_iam_key
     )
 
     model = sdk.models.completions("yandexgpt", model_version="rc")
@@ -148,6 +256,7 @@ def summarize_objects_from_text_request_yandex(prompt: str) -> str:
 
     except Exception as e:
         return f"An error occurred: {e}"
+
 
 def text_to_speach(text: str, output_path: str) -> None:
     model = ttsModel(model_name="vosk-model-tts-ru-0.8-multi")
