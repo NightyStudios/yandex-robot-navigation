@@ -20,6 +20,7 @@ async def upload_audio(audio: UploadFile = File(...)) -> dict:
 
     result = get_stt_speechkit(tmp_path)['result']
     print(f'LOG: Расшифрованная фраза: {result}')
+    
     summary = summarize_objects_from_text_request_yandex(result)
     print(f'LOG: Выделенный объект: {summary}')
 

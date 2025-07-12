@@ -7,6 +7,7 @@ import wave
 import openai
 import requests
 import torch
+
 from dotenv import load_dotenv
 from pydub import AudioSegment
 from vosk import Model, KaldiRecognizer
@@ -33,7 +34,7 @@ def convert_raw_to_wav(input_path: str, output_oath: str) -> str:
     return output_oath
 
 
-def get_transcribtion(path: str) -> str:
+def get_transcription(path: str) -> str:
     '''
     :param path: path to file that have to be transcribed
     :return: transcribed text
@@ -258,27 +259,10 @@ def summarize_objects_from_text_request_yandex(prompt: str) -> str:
 
 
 def text_to_speach(text: str, output_path: str) -> None:
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Используемое устройство: {device}")
-
     model = ttsModel(model_name="vosk-model-tts-ru-0.8-multi")
-
-    model.model = model.model.to(device)
     synth = Synth(model)
 
     synth.synth(f"Привет! Сейчас найду тебе {text[0][0]}!", output_path, speaker_id=2)
     print(f"Ответ сохранён в {output_path}")
 
     return None
-
-# user_input = text
-# generated_text = summarize_objects_from_text_request(user_input)
-# print(f"Extracted: {generated_text}")
-
-
-# model = ttsModel(model_name="vosk-model-tts-ru-0.8-multi")
-# synth = Synth(model)
-#
-# synth.synth(f"Привет! Сейчас найду тебе {generated_text[0][0]}!", "out.wav", speaker_id=2)
-# print("Ответ сохранён в out.wav")
-# Пожалуйста найди красный куб. Где то здесь зелёная бутылка. О, крутой белый попугай. Подойди к пирамидке. найди новый ноутбук
