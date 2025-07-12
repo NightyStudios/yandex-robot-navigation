@@ -60,4 +60,3 @@ vosk-tts==0.3.60
 webrtcvad==2.0.10
 websockets==15.0.1
 openai==0.28
-yandex-cloud-ml-sdk

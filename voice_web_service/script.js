@@ -36,7 +36,7 @@ mediaRecorder.onstop = async () => {
   formData.append("audio", blob, "recording.webm");
 
   try {
-    const res = await fetch("/api/voice/v1/upload", {
+    const res = await fetch("http://localhost/api/voice/v1/upload", {
       method: "POST",
       body: formData
     });
