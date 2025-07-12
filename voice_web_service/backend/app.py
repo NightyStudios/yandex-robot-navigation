@@ -19,7 +19,10 @@ async def upload_audio(audio: UploadFile = File(...)) -> dict:
         tmp_path = tmp.name
 
     result = get_stt_speechkit(tmp_path)['result']
+    print(f'LOG: Расшифрованная фраза: {result}')
     summary = summarize_objects_from_text_request_yandex(result)
+    print(f'LOG: Выделенный объект: {summary}')
+
 
     with tempfile.NamedTemporaryFile(suffix=".raw", delete=False) as tts_file:
         tts_path_raw = tts_file.name
@@ -36,4 +39,4 @@ async def upload_audio(audio: UploadFile = File(...)) -> dict:
 
     threading.Thread(target=play_and_cleanup, args=(tts_path_wav, tmp_path, tts_path_raw)).start()
 
-    return {"summary": summary}
+    return {"result": f"Привет! Сейчас найду тебе {summary.split(';')[0]}!"}
