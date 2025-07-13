@@ -33,7 +33,7 @@ async def upload_audio(audio: UploadFile = File(...)) -> dict:
     convert_raw_to_wav(tts_path_raw, tts_path_wav)
 
     def play_and_cleanup(path_to_audio, path_to_input, path_to_cleanup):
-        subprocess.run(["afplay", path_to_audio])
+        subprocess.run(["aplay", path_to_audio])
         os.remove(path_to_audio)
         os.remove(path_to_input)
         os.remove(path_to_cleanup)
