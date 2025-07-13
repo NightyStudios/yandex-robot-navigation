@@ -79,8 +79,9 @@ def get_stt_speechkit(path: str) -> str:
     return result
 
 
-def get_tts_speechkit(text: str, output_path: str) -> str:
-    text = f"Привет! Сейчас найду тебе {text.split(';')[0]}!"
+def get_tts_speechkit(text: str, output_path: str, find=False) -> str:
+    if find:
+        text = f"Сейчас найду тебе {text.split(';')[0]}!"
 
     response = requests.post(
         "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize",
