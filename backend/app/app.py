@@ -1,5 +1,3 @@
-from app.models import Title
-
 from app.core.OWLV2 import run_owlv2_inference_hardcoded
 
 from fastapi import FastAPI, Request, HTTPException
