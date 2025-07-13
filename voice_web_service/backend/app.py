@@ -47,7 +47,16 @@ async def upload_audio(audio: UploadFile = File(...)) -> dict:
 
 @api.post('/play')
 async def play_custom_sound(audio: UploadFile = File(...)):
-    pass
+    filetype = audio.content_type
+    suffix = filetype.split('/')[-1]
+
+    with tempfile.NamedTemporaryFile(suffix=f'.{suffix}', delete=False) as tmp:
+        content = await audio.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    subprocess.run(["aplay", tmp_path])
+    os.remove(tmp_path)
 
 
 @api.post('/say')
