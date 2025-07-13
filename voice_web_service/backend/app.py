@@ -1,7 +1,6 @@
 import os
 import subprocess
 import tempfile
-import threading
 
 from backend.stt_tts import get_stt_speechkit, summarize_objects_from_text_request_yandex, get_tts_speechkit, \
     convert_raw_to_wav
@@ -41,7 +40,7 @@ async def upload_audio(audio: UploadFile = File(...)) -> dict:
             os.remove(path)
         os.remove(path_to_audio)
 
-    threading.Thread(target=play_and_cleanup, args=(tts_path_wav, tmp_path, tmp_ogg_path, tts_path_raw)).start()
+    play_and_cleanup(tts_path_wav, tmp_path, tmp_ogg_path, tts_path_raw)
 
     return {"result": f"Привет! Сейчас найду тебе {summary.split(';')[0]}!"}
 
@@ -66,12 +65,13 @@ async def say_custom_phrase(text: str):
             os.remove(path)
         os.remove(path_to_audio)
 
-    threading.Thread(target=play_and_cleanup, args=(tts_path_wav, tts_path_raw)).start()
+    play_and_cleanup(tts_path_wav, tts_path_raw)
 
 
 @api.get('/ping')
 async def ping():
     subprocess.run(["aplay", 'voice_web_service/car.mp3'])
+
 
 @api.get('/goal')
 async def goal():
