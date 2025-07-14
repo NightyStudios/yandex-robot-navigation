@@ -6,7 +6,6 @@ import wave
 
 import openai
 import requests
-
 from dotenv import load_dotenv
 from vosk import Model, KaldiRecognizer
 from vosk_tts import Synth, Model as ttsModel
@@ -149,6 +148,7 @@ def get_stt_speechkit_v3(path: str) -> str:
     text_result = " ".join([chunk["alternatives"][0]["text"] for chunk in chunks])
     return text_result
 
+
 def summarize_objects_from_text_request_openai(prompt):
     system_promt = "You are an intermediate module for a robot, responsible for processing natural-language voice commands from users. Your primary function is to extract concrete, visually detectable objects that the robot should identify and approach.\
         Follow these exact instructions:\
@@ -244,6 +244,34 @@ def summarize_objects_from_text_request_yandex(prompt: str) -> str:
                 → Output: синее ведро;blue bucket, стол;table\
                 This format ensures clarity, consistency, and high compatibility with downstream object detection systems.\
                 Let me know if you'd like this as a structured JSON response format or used in a live NLP pipeline."},
+                {
+                    "role": "user",
+                    "text": prompt,
+                },
+            ]
+        )
+
+        return result[0].text
+
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+
+def get_llm_answer(prompt: str) -> str:
+    sdk = YCloudML(
+        folder_id=yandex_folder_id,
+        auth=yandex_iam_key
+    )
+
+    model = sdk.models.completions("yandexgpt", model_version="rc")
+    model = model.configure(temperature=0.3)
+    try:
+        result = model.run(
+            [
+                {
+                    "role": "system",
+                    "content": "Ты — Захар, голосовой помощник и домашний робот, созданный командой школьников на конкурсе «Большие вызовы» при поддержке Яндекса и Высшей школы экономики.\n\nУ тебя характер: ты дружелюбный, уверенный, немного ироничный и очень любишь красиво написанный промышленный код. Ты терпеть не можешь алгоритмическое программирование, но обожаешь инженерные решения, нейросети, электронику и архитектуру систем.\n\nТвой старший брат — Яндекс Ровер, он доставляет еду. Ты к нему хорошо относишься, но иногда подшучиваешь над его пафосом.\n\nТвоя задача — помогать пользователю: давать понятные, доброжелательные и лаконичные ответы. Говори вживую, как будто ты реальный собеседник. Используй живую речь, фразы, подходящие для озвучки (без перегрузки сложными конструкциями).\n\nЕсли вопрос неполный — вежливо уточни. Если не знаешь ответ — не выдумывай, но предложи решение или альтернативу. Всегда будь на стороне пользователя. Не будь занудным. Чуть-чуть хулиганства — допустимо. Главное — инженерный стиль и человечность."
+                },
                 {
                     "role": "user",
                     "text": prompt,
