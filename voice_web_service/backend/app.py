@@ -65,7 +65,7 @@ async def say_custom_phrase(text: str):
         tts_path_raw = tts_file.name
 
     get_tts_speechkit(text, output_path=tts_path_raw)
-    tts_path_wav = tts_path_raw.split('.')[-1] + '.wav'
+    tts_path_wav = tts_path_raw.split('.')[0] + '.wav'
     convert_raw_to_wav(tts_path_raw, tts_path_wav)
 
     def play_and_cleanup(path_to_audio, *paths_to_cleanup):
