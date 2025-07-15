@@ -297,7 +297,7 @@ def text_to_speach(text: str, output_path: str) -> None:
     return None
 
 
-def play_audio(file_path: str) -> None:
+def play_audio(file_path: str, format=None) -> None:
     """Play audio file using ffplay to avoid simpleaudio segfaults."""
     subprocess.run(
         [
