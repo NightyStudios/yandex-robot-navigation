@@ -297,12 +297,16 @@ def text_to_speach(text: str, output_path: str) -> None:
     return None
 
 
-def play_audio(file_path, format: str):
-    audio = AudioSegment.from_file(file_path, format=format)
-    play_obj = sa.play_buffer(
-        audio.raw_data,
-        num_channels=audio.channels,
-        bytes_per_sample=audio.sample_width,
-        sample_rate=audio.frame_rate
+def play_audio(file_path: str) -> None:
+    """Play audio file using ffplay to avoid simpleaudio segfaults."""
+    subprocess.run(
+        [
+            "ffplay",
+            "-nodisp",
+            "-autoexit",
+            "-loglevel",
+            "quiet",
+            file_path,
+        ],
+        check=False,
     )
-    play_obj.wait_done()
