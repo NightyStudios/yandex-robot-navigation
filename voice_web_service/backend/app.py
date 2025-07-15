@@ -69,7 +69,10 @@ async def say_custom_phrase(text: str):
     convert_raw_to_wav(tts_path_raw, tts_path_wav)
 
     def play_and_cleanup(path_to_audio, *paths_to_cleanup):
-        play_audio(path_to_audio)
+        try:
+            play_audio(path_to_audio)
+        except Exception:
+            return
         for path in paths_to_cleanup:
             os.remove(path)
         os.remove(path_to_audio)
