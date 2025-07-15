@@ -55,7 +55,7 @@ async def play_custom_sound(audio: UploadFile = File(...)):
         tmp.write(content)
         tmp_path = tmp.name
 
-    subprocess.run(["aplay", tmp_path])
+    subprocess.run(["aplay", "-f", "S16_LE", "-r", "16000", "-c", "1" tmp_path])
     os.remove(tmp_path)
 
 
