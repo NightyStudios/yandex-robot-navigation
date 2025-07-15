@@ -35,7 +35,7 @@ async def upload_audio(audio: UploadFile = File(...)) -> dict:
     convert_raw_to_wav(tts_path_raw, tts_path_wav)
 
     def play_and_cleanup(path_to_audio, *paths_to_cleanup):
-        play_audio(path_to_audio)
+        play_audio(path_to_audio, format='wav')
         for path in paths_to_cleanup:
             os.remove(path)
         os.remove(path_to_audio)
@@ -55,7 +55,7 @@ async def play_custom_sound(audio: UploadFile = File(...)):
         tmp.write(content)
         tmp_path = tmp.name
 
-    play_audio(tmp_path)
+    play_audio(tmp_path, format=suffix)
     os.remove(tmp_path)
 
 
@@ -70,7 +70,7 @@ async def say_custom_phrase(text: str):
 
     def play_and_cleanup(path_to_audio, *paths_to_cleanup):
         try:
-            play_audio(path_to_audio)
+            play_audio(path_to_audio, format='wav')
         except Exception:
             return
         for path in paths_to_cleanup:
@@ -82,4 +82,4 @@ async def say_custom_phrase(text: str):
 
 @api.get('/goal')
 async def goal():
-    play_audio('voice_web_service/goal.mp3')
+    play_audio('voice_web_service/goal.mp3', format='mp3')

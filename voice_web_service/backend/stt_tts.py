@@ -6,13 +6,12 @@ import wave
 
 import openai
 import requests
+import simpleaudio as sa
 from dotenv import load_dotenv
+from pydub import AudioSegment
 from vosk import Model, KaldiRecognizer
 from vosk_tts import Synth, Model as ttsModel
 from yandex_cloud_ml_sdk import YCloudML
-
-from pydub import AudioSegment
-import simpleaudio as sa
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -298,10 +297,8 @@ def text_to_speach(text: str, output_path: str) -> None:
     return None
 
 
-
-
-def play_audio(file_path):
-    audio = AudioSegment.from_file(file_path)  # autodetect format
+def play_audio(file_path, format: str):
+    audio = AudioSegment.from_file(file_path, format=format)
     play_obj = sa.play_buffer(
         audio.raw_data,
         num_channels=audio.channels,
