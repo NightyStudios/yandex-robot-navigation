@@ -11,6 +11,9 @@ from vosk import Model, KaldiRecognizer
 from vosk_tts import Synth, Model as ttsModel
 from yandex_cloud_ml_sdk import YCloudML
 
+from pydub import AudioSegment
+import simpleaudio as sa
+
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -293,3 +296,16 @@ def text_to_speach(text: str, output_path: str) -> None:
     print(f"Ответ сохранён в {output_path}")
 
     return None
+
+
+
+
+def play_audio(file_path):
+    audio = AudioSegment.from_file(file_path)  # autodetect format
+    play_obj = sa.play_buffer(
+        audio.raw_data,
+        num_channels=audio.channels,
+        bytes_per_sample=audio.sample_width,
+        sample_rate=audio.frame_rate
+    )
+    play_obj.wait_done()
