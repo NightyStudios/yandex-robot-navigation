@@ -55,7 +55,7 @@ async def play_custom_sound(audio: UploadFile = File(...)):
         tmp.write(content)
         tmp_path = tmp.name
 
-    subprocess.run(["aplay", "-f", "S16_LE", "-r", "16000", "-c", "1", tmp_path])
+    subprocess.run(["aplay", tmp_path])
     os.remove(tmp_path)
 
 
@@ -80,9 +80,9 @@ async def say_custom_phrase(text: str):
 
 @api.get('/ping')
 async def ping():
-    subprocess.run(["aplay", 'voice_web_service/car.mp3'])
+    subprocess.run(["aplay", 'voice_web_service/car.wav'])
 
 
 @api.get('/goal')
 async def goal():
-    subprocess.run(["aplay", 'voice_web_service/goal.mp3'])
+    subprocess.run(["aplay", 'voice_web_service/goal.wav'])
