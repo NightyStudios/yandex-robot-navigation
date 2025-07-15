@@ -77,12 +77,6 @@ async def say_custom_phrase(text: str):
     play_and_cleanup(tts_path_wav, tts_path_raw)
 
 
-
-@api.get('/ping')
-async def ping():
-    play_audio('voice_web_service/car.mp3')
-
-
 @api.get('/goal')
 async def goal():
     play_audio('voice_web_service/goal.mp3')
